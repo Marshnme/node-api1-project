@@ -21,7 +21,7 @@ server.get("/api/users", (req,res) => {
     })
     .catch(err => {
         console.log("error", err)
-        res.status(500).json({error:"failed to get users from db"})
+        res.status(500).json({error:"The users information could not be retrieved."})
     })
 })
 
@@ -29,28 +29,47 @@ server.get("/api/users", (req,res) => {
 //GET by ID
 server.get("/api/users/:id", (req,res) => {
     const id = req.params.id;
-    db.findById(id)
+
+    
+    
+        db.findById(id)
     .then(userId => {
+        if(!userId){
+            res.status(404).json({error:"The user with the specified ID does not exist."})
+        }
         res.status(200).json(userId)
     })
     .catch(err => {
         console.log("error", err)
-        res.status(500).json({error:"failed to get user from db"})
+        res.status(500).json({error:"The user information could not be retrieved."})
     })
+
+    
+    
+        
+    
+    
+        
+
+    
 })
 
 //POST req
 
 server.post("/api/users", (req,res) => {
-    const userInfo = req.body;
+    const {name, bio} = req.body;
+    (!name || !bio)
+    ? res
+        .status(400).json({error:"Please provide name and bio for the user."})
 
-    db.insert(userInfo)
-    .then(id => {
-        res.status(201).json(id)
+
+    :db.insert(req.body)
+    .then(user => {
+        res.status(201).json(user)
     } )
     .catch(err => {
         console.log("error", err)
-        res.status(500).json({error:"failed to add user from db"})
+        res.status(500).json({error:"There was an error while saving the user to the database"})
     })
 })
 
@@ -58,11 +77,21 @@ server.post("/api/users", (req,res) => {
 //PUT req
 
 server.put("/api/users/:id", (req,res) => {
-    const newInfo = req.body;
-    const oldUser = req.params.id
-    db.update(oldUser,newInfo)
+    const {name,bio} = req.body;
+    const oldUser = req.params.id;
+
+    (!name || !bio)
+
+    ?res 
+    .status(400).json({error:"Please provide name and bio for the user."})
+
+
+    :db.update(oldUser,req.body)
     .then( count => {
-        res.status(201).json(count)
+        if(!count){
+            res.status(404).json({error:"The user with the specified ID does not exist."})
+        }
+        res.status(200).json(count)
     })
     .catch(err => {
         console.log("error", err)
@@ -78,11 +107,14 @@ server.delete("/api/users/:id", (req,res) => {
 
     db.remove(user)
     .then(gone => {
+        if(!gone){
+            res.status(404).json({error:"The user with the specified ID does not exist."})
+        }
         res.status(200).json(gone)
     })
     .catch(err => {
         console.log("error", err)
-        res.status(500).json({error:"failed to delete user from db"})
+        res.status(500).json({error:"The user could not be removed"})
     })
 })
 
